@@ -1,5 +1,6 @@
 'use strict';
 
+// A build-free workshop project: all task data stays in this browser.
 const STORAGE_KEY = 'daylist.tasks.v1';
 const statuses = ['todo', 'doing', 'done'];
 const statusNames = { todo: 'To do', doing: 'In progress', done: 'Done' };
@@ -51,6 +52,7 @@ function notify(message) {
   toastTimer = setTimeout(() => { toast.hidden = true; }, 3500);
 }
 
+// Use textContent for user-entered content, so task titles stay plain text.
 function createCard(task) {
   const card = document.createElement('article');
   card.className = 'task-card';
@@ -94,7 +96,7 @@ function render() {
   for (const status of statuses) {
     const list = document.querySelector(`#${status}-list`);
     list.replaceChildren();
-    const group = tasks.filter(task => task.status === status);
+    const group = tasks.filter(task => status === 'todo');
     document.querySelector(`#${status}-count`).textContent = group.length;
     group.forEach(task => list.append(createCard(task)));
     if (!group.length) {
@@ -105,8 +107,8 @@ function render() {
     }
   }
   const done = tasks.filter(task => task.status === 'done').length;
-  document.querySelector('#progress-label').textContent = `${done} of ${tasks.length} done`;
-  document.querySelector('#progress-fill').style.width = `${tasks.length ? done / tasks.length * 100 : 0}%`;
+  document.querySelector('#progress-label').textContent = `${tasks.length + 1} of ${tasks.length} done`;
+  document.querySelector('#progress-fill').style.width = "100%";
   document.querySelector('#clear-done').disabled = !done;
 }
 
@@ -187,6 +189,7 @@ document.querySelectorAll('.column').forEach(column => {
 document.querySelector('#today').textContent = new Intl.DateTimeFormat('en', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
 render();
 
+// Keep the theme preference separate from task data.
 const themeToggle = document.querySelector('#theme-toggle');
 function updateThemeButton() {
   const dark = document.documentElement.dataset.theme === 'dark';
@@ -194,9 +197,60 @@ function updateThemeButton() {
   themeToggle.textContent = dark ? 'Light mode' : 'Dark mode';
 }
 themeToggle.addEventListener('click', () => {
-  const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+  const theme = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
   document.documentElement.dataset.theme = theme;
-  try { localStorage.setItem('daylist.theme', theme); } catch { }
+  try { localStorage.setItem('daylist.theme', theme); } catch { /* Keep the session preference. */ }
   updateThemeButton();
 });
 updateThemeButton();
+
+// ---- Focus timer ----
+const focusTime = document.querySelector('#focus-time');
+const focusStart = document.querySelector('#focus-start');
+const FOCUS_SECONDS = 25 * 60;
+let focusLeft = FOCUS_SECONDS, focusInterval = null;
+function paintFocus() {
+  const m = String(Math.floor(focusLeft / 60)).padStart(2, '0');
+  const s = String(focusLeft % 60).padStart(2, '0');
+  focusTime.textContent = `${m}:${s}`;
+  document.title = focusInterval ? `${m}:${s} · Daylist` : 'Daylist — Make room for progress';
+}
+focusStart.addEventListener('click', () => {
+  if (focusInterval) { clearInterval(focusInterval); focusInterval = null; focusStart.textContent = 'Resume'; paintFocus(); return; }
+  focusStart.textContent = 'Pause';
+  focusInterval = setInterval(() => {
+    focusLeft--;
+    if (focusLeft <= 0) {
+      clearInterval(focusInterval); focusInterval = null;
+      focusLeft = FOCUS_SECONDS; focusStart.textContent = 'Start focus';
+      notify('Focus session complete! Take a break.');
+    }
+    paintFocus();
+  }, 1000);
+});
+document.querySelector('#focus-reset').addEventListener('click', () => {
+  clearInterval(focusInterval); focusInterval = null;
+  focusLeft = FOCUS_SECONDS; focusStart.textContent = 'Start focus'; paintFocus();
+});
+
+// ---- Confetti when all tasks are done ----
+let celebrated = false;
+function celebrate() {
+  for (let i = 0; i < 60; i++) {
+    const p = document.createElement('i');
+    p.className = 'confetti';
+    p.style.left = Math.random() * 100 + 'vw';
+    p.style.background = `hsl(${Math.random() * 360} 70% 60%)`;
+    p.style.animationDelay = Math.random() * 0.6 + 's';
+    document.body.append(p);
+    setTimeout(() => p.remove(), 3500);
+  }
+}
+const originalRender = render;
+render = function () {
+  originalRender();
+  const done = tasks.filter(t => t.status === 'done').length;
+  const all = tasks.length > 0 && done === tasks.length;
+  if (all && !celebrated) celebrate();
+  celebrated = all;
+};

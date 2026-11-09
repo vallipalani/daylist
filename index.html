@@ -6,9 +6,10 @@
   <meta name="description" content="A little space for your next big thing. A simple, local-first task board.">
   <title>Daylist — Make room for progress</title>
   <script>
+    // Apply the saved theme before painting the page.
     try {
       if (localStorage.getItem('daylist.theme') === 'dark') document.documentElement.dataset.theme = 'dark';
-    } catch { }
+    } catch { /* Theme switching still works when storage is unavailable. */ }
   </script>
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
@@ -17,6 +18,7 @@
   <header class="site-header"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">✓</span> daylist<span class="brand-dot">.</span></a><span class="workspace-label">YOUR PERSONAL WORKSPACE</span><button type="button" id="theme-toggle" class="theme-toggle" aria-pressed="false">Dark mode</button><span class="avatar" aria-label="Personal workspace">You</span></header>
   <main>
     <section class="intro"><div><p class="eyebrow" id="today"></p><h1>Small steps.<br><span>Real progress.</span></h1></div><div class="progress-panel"><div class="progress-heading"><span>YOUR MOMENTUM</span><span id="progress-label">0 of 0 done</span></div><div class="progress-track"><div id="progress-fill"></div></div></div></section>
+    <section class="focus-panel" aria-label="Focus timer"><div><span class="focus-label">FOCUS TIMER</span><strong id="focus-time">25:00</strong></div><div class="focus-actions"><button type="button" id="focus-start" class="primary">Start focus</button><button type="button" id="focus-reset" class="theme-toggle">Reset</button></div></section>
     <section class="board-section" aria-labelledby="board-title">
       <div class="board-toolbar"><div class="board-title"><h2 id="board-title">My board</h2><span class="local-badge"><span></span> Saved on this device</span></div><button class="primary" id="new-task"><span aria-hidden="true">＋</span> New task</button></div>
       <div class="board" id="board">
@@ -31,19 +33,5 @@
   <dialog id="task-dialog"><form id="task-form"><div class="dialog-heading"><h2 id="dialog-title">A new little step</h2><button type="button" class="close-button" id="close-dialog" aria-label="Close">×</button></div><label for="task-title">Task name</label><input id="task-title" name="title" placeholder="What would you like to get done?" maxlength="120" required><label for="task-notes">Notes <span>(optional)</span></label><textarea id="task-notes" name="notes" rows="3" maxlength="600" placeholder="A few details to help you get started…"></textarea><div class="form-row"><div><label for="task-status">Status</label><select id="task-status" name="status"><option value="todo">To do</option><option value="doing">In progress</option><option value="done">Done</option></select></div><div><label for="task-priority">Priority</label><select id="task-priority" name="priority"><option value="normal">Normal</option><option value="high">High</option><option value="low">Low</option></select></div></div><div class="dialog-actions"><button type="button" id="delete-task" class="danger">Delete task</button><button type="submit" class="primary">Save task <span aria-hidden="true">↗</span></button></div></form></dialog>
   <div id="announcement" class="sr-only" role="status" aria-live="polite"></div>
   <div id="toast" role="status" hidden></div>
-  <div class="wrong-version" role="alertdialog" aria-modal="true" aria-labelledby="wv-title">
-    <div class="wv-box">
-      <h2 id="wv-title">WRONG VERSION</h2>
-      <p class="wv-lead">This is the wrong version. Find the right version!</p>
-      <p>Everything was working five minutes ago.</p>
-      <p class="wv-contact">PLEASE CONTACT YOUR NEAREST DEVELOPER.</p>
-      <div class="wv-loading">
-        <p>Attempting to fix website...</p>
-        <div class="wv-track"><div class="wv-fill"></div></div>
-        <p class="wv-percent">3%</p>
-        <p class="wv-eta">Estimated completion: sometime next semester.</p>
-      </div>
-    </div>
-  </div>
 </body>
 </html>
